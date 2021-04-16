@@ -2,7 +2,7 @@
 
 const fs = require("fs");
 const path = require("path");
-const { ask, handleEnv } = require("./utils");
+const { ask, handleEnv, isCommentLine } = require("./utils");
 
 const currentCwd = process.cwd();
 let ENV_PATH = path.resolve(currentCwd, ".env");
@@ -97,7 +97,8 @@ const listEnvVariables = () => {
     const lines = envData.split("\n");
     for (let i=0; i<lines.length; i++){
         const line = lines[i];
-        if (line != ""){
+        const isComment = isCommentLine({str: line});
+        if (line != "" && isComment == false){
             console.log(`${i}. ${line}`);
         }
     }
