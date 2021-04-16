@@ -91,14 +91,26 @@ const addVariable = async ({ variable = null, value = null }) => {
     }
 }
 
+const listEnvVariables = () => {
+    isEnvFileExists();
+    const envData = fs.readFileSync(ENV_PATH, "utf8");
+    const lines = envData.split("\n");
+    for (let i=0; i<lines.length; i++){
+        const line = lines[i];
+        if (line != ""){
+            console.log(`${i}. ${line}`);
+        }
+    }
+}
+
 const start = () => {
     try {
         const argvs = process.argv;
         const command = argvs[2];
-        const { ENV_VAR, ENV_VAL } = handleEnv({ str: argvs[3] });
 
         switch (command) {
             case "add":
+                const { ENV_VAR, ENV_VAL } = handleEnv({ str: argvs[3] });
                 addVariable({ variable: ENV_VAR, value: ENV_VAL });
                 break;
             case "remove":
@@ -106,10 +118,11 @@ const start = () => {
                 break;
             case "list":
                 console.log("TODO: List all of env variables");
+                listEnvVariables();
                 break;
         }
     } catch (e) {
-        console.error(e.message);
+        console.error(e);
     }
 
 }
