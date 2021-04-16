@@ -6,7 +6,7 @@ const { ask, handleEnv, isCommentLine } = require("./utils");
 
 const currentCwd = process.cwd();
 let ENV_PATH = path.resolve(currentCwd, ".env");
-
+const argvs = process.argv;
 
 const isEnvFileExists = () => {
     try {
@@ -54,9 +54,9 @@ const checkVariable = async ({ variable = null, value = null }) => {
             const line = splitted[i];
             const split = line.split("=");
             if (split[0].match(pattern)) {
-                const { ENV_VAR, ENV_VAL } = handleEnv({str: line});
+                const { ENV_VAR, ENV_VAL } = handleEnv({ str: line });
                 alreadyExists = true;
-                const answer = await ask(`${ENV_VAR} already exits and it's value is <${ENV_VAL}> \n Continue? [Y/N] `);
+                const answer = await ask(`<${ENV_VAR}> already exits and it's value is <${ENV_VAL}> \n Continue? [Y/N] `);
                 if (answer.match(/n|no/i)) {
                     console.log('cmd will terminate');
                     process.exit(0);
@@ -78,6 +78,11 @@ const checkVariable = async ({ variable = null, value = null }) => {
 const addVariable = async ({ variable = null, value = null }) => {
     try {
         isEnvFileExists();
+        if (isCommentLine({ str: variable }) || isCommentLine({ str: value })) {
+            console.log(`Your value looks like a comment line`);
+            console.log(`Please use --comment option to add comment`);
+            process.exit();
+        }
         const status = await checkVariable({ variable, value });
         if (status == false) {
             fs.appendFileSync(ENV_PATH, `\n${variable}=${value}`);
@@ -95,20 +100,32 @@ const listEnvVariables = () => {
     isEnvFileExists();
     const envData = fs.readFileSync(ENV_PATH, "utf8");
     const lines = envData.split("\n");
-    for (let i=0; i<lines.length; i++){
+    for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
-        const isComment = isCommentLine({str: line});
-        if (line != "" && isComment == false){
+        const isComment = isCommentLine({ str: line });
+        if (line != "" && isComment == false) {
             console.log(`${i}. ${line}`);
+        }
+    }
+}
+
+const commentLineOption = () => {
+    const command = argvs[4];
+    if (command == '--comment') {
+        const commentVal = argvs[5];
+        if (isCommentLine({ str: commentVal })) {
+            fs.appendFileSync(ENV_PATH, `\n${commentVal}`);
+        } else {
+            console.log(`<${commentVal}> is not a comment line`);
+            console.log(`It must starts with "#"`);
         }
     }
 }
 
 const start = () => {
     try {
-        const argvs = process.argv;
         const command = argvs[2];
-
+        commentLineOption();
         switch (command) {
             case "add":
                 const { ENV_VAR, ENV_VAL } = handleEnv({ str: argvs[3] });
