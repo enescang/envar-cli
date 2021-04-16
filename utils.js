@@ -19,7 +19,8 @@ const handleEnv = ({ str = null }) => {
     if (splitted.length < 2) {
         throw new Error(`Your input malformed. It must be like "MY_VAR=MY_VALUE"`);
     }
-    return { ENV_VAR: splitted[0], ENV_VAL: splitted[1] };
+    const extractValue = str.replace(`${splitted[0]}=`,"");
+    return { ENV_VAR: splitted[0], ENV_VAL: extractValue };
 }
 
 
