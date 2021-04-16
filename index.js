@@ -2,29 +2,17 @@
 
 const fs = require("fs");
 const path = require("path");
-const readline = require("readline");
-
-const argvs = process.argv;
+const { ask, handleEnv } = require("./utils");
 
 const currentCwd = process.cwd();
-const ENV_PATH = path.resolve(currentCwd, ".env");
+let ENV_PATH = path.resolve(currentCwd, ".env");
 
-const ask = (questionText) => {
-    return new Promise((resolve, reject) => {
-        const _ask = readline.createInterface({
-            input: process.stdin,
-            output: process.stdout,
-            terminal: false,
-        });
-        _ask.question(questionText, (input) => resolve(input));
-    });
-}
 
-const envExists = () => {
+const isEnvFileExists = () => {
     try {
         const isExists = fs.existsSync(ENV_PATH);
         if (!isExists) {
-            createEnv();
+            createEnvFile();
         }
         console.log("is file exists: " + isExists)
         return { data: isExists };
@@ -33,58 +21,10 @@ const envExists = () => {
     }
 }
 
-const createEnv = () => {
+const createEnvFile = () => {
     try {
         const data = fs.openSync(ENV_PATH, "w");
         return { data };
-    } catch (e) {
-        return { error: e.message };
-    }
-}
-
-const addVariable = async({ variable = null, value = null }) => {
-    try {
-        envExists();
-        const status = await checkVariable({variable, value});
-        if(status == false){
-            fs.appendFileSync(ENV_PATH, `\n${variable}=${value}`);
-            console.log(`RESULT: ${variable} added as a new variable`);
-            process.exit();
-        }
-        console.log(`RESULT: ${variable} edited with ${value}`);
-        process.exit();
-    } catch (e) {
-        return { error: e.message };
-    }
-}
-
-const checkVariable = async ({ variable = null, value = null }) => {
-    try {
-        const envData = fs.readFileSync(ENV_PATH, "utf8");
-        const splitted = envData.split("\n");
-        const pattern = new RegExp(variable);
-        let alreadyExists = false;
-        for (let i = 0; i < splitted.length; i++) {
-            const line = splitted[i];
-            const split = line.split("=");
-            if (split.length > 0) {
-                if (split[0].match(pattern)) {
-                    alreadyExists = true;
-                    const answer = await ask(`${split[0]} already exits and it's value is ${split[1]} \n Continue? [Y/N]`);
-                    if (answer == 'N') {
-                        console.log('cmd will terminate');
-                        process.exit(0);
-                    }
-                    if (answer == 'Y') {
-                        console.log('we will continue to add');
-                        const res = changeLine({ line: i, value: value });
-                        fs.writeFileSync(ENV_PATH, res);
-                        break;
-                    }
-                }
-            }
-        }
-        return alreadyExists;
     } catch (e) {
         return { error: e.message };
     }
@@ -104,4 +44,74 @@ const changeLine = ({ line = null, value = "" }) => {
     return result;
 }
 
-addVariable({variable:'DATA', value:300});
+const checkVariable = async ({ variable = null, value = null }) => {
+    try {
+        const envData = fs.readFileSync(ENV_PATH, "utf8");
+        const splitted = envData.split("\n");
+        const pattern = new RegExp(variable);
+        let alreadyExists = false;
+        for (let i = 0; i < splitted.length; i++) {
+            const line = splitted[i];
+            const split = line.split("=");
+            if (split[0].match(pattern)) {
+                const { ENV_VAR, ENV_VAL } = handleEnv({str: line});
+                alreadyExists = true;
+                const answer = await ask(`${ENV_VAR} already exits and it's value is <${ENV_VAL}> \n Continue? [Y/N] `);
+                if (answer.match(/n|no/i)) {
+                    console.log('cmd will terminate');
+                    process.exit(0);
+                }
+                if (answer.match(/y|yes/i)) {
+                    console.log('we will continue to add');
+                    const res = changeLine({ line: i, value: value });
+                    fs.writeFileSync(ENV_PATH, res);
+                    break;
+                }
+            }
+        }
+        return alreadyExists;
+    } catch (e) {
+        return { error: e.message };
+    }
+}
+
+const addVariable = async ({ variable = null, value = null }) => {
+    try {
+        isEnvFileExists();
+        const status = await checkVariable({ variable, value });
+        if (status == false) {
+            fs.appendFileSync(ENV_PATH, `\n${variable}=${value}`);
+            console.log(`RESULT: ${variable} added as a new variable`);
+            process.exit();
+        }
+        console.log(`RESULT: ${variable} edited with ${value}`);
+        process.exit();
+    } catch (e) {
+        return { error: e.message };
+    }
+}
+
+const start = () => {
+    try {
+        const argvs = process.argv;
+        const command = argvs[2];
+        const { ENV_VAR, ENV_VAL } = handleEnv({ str: argvs[3] });
+
+        switch (command) {
+            case "add":
+                addVariable({ variable: ENV_VAR, value: ENV_VAL });
+                break;
+            case "remove":
+                console.log("TODO: Delete env var");
+                break;
+            case "list":
+                console.log("TODO: List all of env variables");
+                break;
+        }
+    } catch (e) {
+        console.error(e.message);
+    }
+
+}
+
+start();
