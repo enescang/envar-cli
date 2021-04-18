@@ -100,11 +100,14 @@ const listEnvVariables = () => {
     isEnvFileExists();
     const envData = fs.readFileSync(ENV_PATH, "utf8");
     const lines = envData.split("\n");
+    let count = 0;
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         const isComment = isCommentLine({ str: line });
-        if (line != "" && isComment == false) {
-            console.log(`${i}. ${line}`);
+        const splitted = line.split("=");
+        if (line != "" && isComment == false && splitted.length > 1) {
+            console.log(`${count}. ${line}`);
+            count++;
         }
     }
 }
@@ -122,10 +125,33 @@ const commentLineOption = () => {
     }
 }
 
+/**
+ * Types can be:
+ * example
+ * local
+ * dev
+ * development
+ * prod
+ * production
+ * staging
+ * preview
+ */
+const envFileType = () => {
+    const ENV_TYPES = ["example","local","dev","development","prod","production","staging","preview"];
+    const lastArgv = argvs[argvs.length-1];
+    const clearArgv = lastArgv.replace(/-/g,"");
+    const envTypeIndex = ENV_TYPES.indexOf(clearArgv);
+    if(envTypeIndex > -1){
+        ENV_PATH += "." + ENV_TYPES[envTypeIndex];
+    }
+    return true;
+}
+
 const start = () => {
     try {
         const command = argvs[2];
         commentLineOption();
+        envFileType();
         switch (command) {
             case "add":
                 const { ENV_VAR, ENV_VAL } = handleEnv({ str: argvs[3] });
