@@ -44,6 +44,28 @@ const changeLine = ({ line = null, value = "" }) => {
     return result;
 }
 
+const removeEnvVariable = ({variable=null}) => {
+    const data = fs.readFileSync(ENV_PATH, "utf8");
+    let lines = data.split("\n");
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const splitted = line.split("=");
+        const isEnvMatch = splitted[0] == variable;
+        if(isCommentLine({str: line}) == false && isEnvMatch == true) {
+            lines.splice(i, 1);
+            break;
+        }
+        //If variable not found
+        if(i == lines.length -1){
+            console.log(`Could not found ${variable} on ${ENV_PATH}`);
+            console.log(`Please make sure to pay attention to case sensitivity.`);
+        }
+    }
+    const result = lines.join("\n");
+    fs.writeFileSync(ENV_PATH, result);
+    return result;
+}
+
 const checkVariable = async ({ variable = null, value = null }) => {
     try {
         const envData = fs.readFileSync(ENV_PATH, "utf8");
@@ -159,6 +181,7 @@ const start = () => {
                 break;
             case "remove":
                 console.log("TODO: Delete env var");
+                removeEnvVariable({ variable: argvs[3] });
                 break;
             case "list":
                 console.log("TODO: List all of env variables");
