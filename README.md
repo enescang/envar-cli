@@ -22,7 +22,7 @@ PORT=8080
 ```
 
 ### Add Variable With Comment
-If you want to add a comment to your .env file, please use **--comment** option.
+If you want to add a comment to your .env file, please use **--comment** option. It will be add your comment line before the variable.
 
 ``` shell
 envar-cli add "SECRET_KEY=github" --comment "# SECRET KEYS"
@@ -30,5 +30,5 @@ envar-cli add "SECRET_KEY=github" --comment "# SECRET KEYS"
 ##### Result:
 ``` txt
 # SECRET KEYS
-PORT=8080
+SECRET_KEY=github
 ```
