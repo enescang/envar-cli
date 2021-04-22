@@ -6,16 +6,26 @@ const { ask, handleEnv, isCommentLine } = require("./utils");
 
 const currentCwd = process.cwd();
 let ENV_PATH = path.resolve(currentCwd, ".env");
+const ENV_TYPES = ["example", "local", "dev", "development", "prod", "production", "staging", "preview"];
+let extension = "";
 const argvs = process.argv;
 
-const isEnvFileExists = () => {
+
+const getExtension = () => {
+    return extension != "" ? `.env.${extension}` : ".env";
+}
+
+const isEnvFileExists = ({ create = true }) => {
     try {
         const isExists = fs.existsSync(ENV_PATH);
-        if (!isExists) {
-            createEnvFile();
+        if (isExists == false) {
+            console.log(`${getExtension()} does not exists.`);
+            if (create == true) {
+                createEnvFile();
+            }
+            return { data: false };
         }
-        console.log("is file exists: " + isExists)
-        return { data: isExists };
+        return { data: true };
     } catch (e) {
         return { error: e.message }
     }
@@ -24,6 +34,7 @@ const isEnvFileExists = () => {
 const createEnvFile = () => {
     try {
         const data = fs.openSync(ENV_PATH, "w");
+        console.log(`Created ${getExtension()} file`);
         return { data };
     } catch (e) {
         return { error: e.message };
@@ -41,22 +52,27 @@ const changeLine = ({ line = null, value = "" }) => {
         }
     }
     const result = lines.join("\n");
+    fs.writeFileSync(ENV_PATH, result);
     return result;
 }
 
-const removeEnvVariable = ({variable=null}) => {
-    const data = fs.readFileSync(ENV_PATH, "utf8");
-    let lines = data.split("\n");
+const removeEnvVariable = ({ variable = null }) => {
+    const { data, error } = isEnvFileExists({ create: false });
+    if (data == false) {
+        return;
+    }
+    const envData = fs.readFileSync(ENV_PATH, "utf8");
+    let lines = envData.split("\n");
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         const splitted = line.split("=");
         const isEnvMatch = splitted[0] == variable;
-        if(isCommentLine({str: line}) == false && isEnvMatch == true) {
+        if (isCommentLine({ str: line }) == false && isEnvMatch == true) {
             lines.splice(i, 1);
             break;
         }
         //If variable not found
-        if(i == lines.length -1){
+        if (i == lines.length - 1) {
             console.log(`Could not found ${variable} on ${ENV_PATH}`);
             console.log(`Please make sure to pay attention to case sensitivity.`);
         }
@@ -85,8 +101,7 @@ const checkVariable = async ({ variable = null, value = null }) => {
                 }
                 if (answer.match(/y|yes/i)) {
                     console.log('we will continue to add');
-                    const res = changeLine({ line: i, value: value });
-                    fs.writeFileSync(ENV_PATH, res);
+                    changeLine({ line: i, value: value });
                     break;
                 }
             }
@@ -99,7 +114,7 @@ const checkVariable = async ({ variable = null, value = null }) => {
 
 const addVariable = async ({ variable = null, value = null }) => {
     try {
-        isEnvFileExists();
+        isEnvFileExists({ create: true });
         if (isCommentLine({ str: variable }) || isCommentLine({ str: value })) {
             console.log(`Your value looks like a comment line`);
             console.log(`Please use --comment option to add comment`);
@@ -119,10 +134,10 @@ const addVariable = async ({ variable = null, value = null }) => {
 }
 
 const listEnvVariables = () => {
-    isEnvFileExists();
+    isEnvFileExists({ create: false });
     const envData = fs.readFileSync(ENV_PATH, "utf8");
     const lines = envData.split("\n");
-    let count = 0;
+    let count = 1;
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         const isComment = isCommentLine({ str: line });
@@ -132,6 +147,7 @@ const listEnvVariables = () => {
             count++;
         }
     }
+    console.log(`RESULT: ${count -1 } variables found in ${getExtension()}`)
 }
 
 const commentLineOption = () => {
@@ -159,12 +175,12 @@ const commentLineOption = () => {
  * preview
  */
 const envFileType = () => {
-    const ENV_TYPES = ["example","local","dev","development","prod","production","staging","preview"];
-    const lastArgv = argvs[argvs.length-1];
-    const clearArgv = lastArgv.replace(/-/g,"");
+    const lastArgv = argvs[argvs.length - 1];
+    const clearArgv = lastArgv.replace(/-/g, "");
     const envTypeIndex = ENV_TYPES.indexOf(clearArgv);
-    if(envTypeIndex > -1){
-        ENV_PATH += "." + ENV_TYPES[envTypeIndex];
+    if (envTypeIndex > -1) {
+        extension = ENV_TYPES[envTypeIndex];
+        ENV_PATH += "." + extension;
     }
     return true;
 }
@@ -172,24 +188,22 @@ const envFileType = () => {
 const start = () => {
     try {
         const command = argvs[2];
-        commentLineOption();
         envFileType();
+        commentLineOption();
         switch (command) {
             case "add":
                 const { ENV_VAR, ENV_VAL } = handleEnv({ str: argvs[3] });
                 addVariable({ variable: ENV_VAR, value: ENV_VAL });
                 break;
             case "remove":
-                console.log("TODO: Delete env var");
                 removeEnvVariable({ variable: argvs[3] });
                 break;
             case "list":
-                console.log("TODO: List all of env variables");
                 listEnvVariables();
                 break;
         }
     } catch (e) {
-        console.error(e);
+        console.error(e.message);
     }
 
 }
