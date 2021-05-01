@@ -82,7 +82,7 @@ const removeEnvVariable = ({ variable = null }) => {
     return result;
 }
 
-const checkVariable = async ({ variable = null, value = null }) => {
+const updateEnvVariable = async ({ variable = null, value = null, forceUpdate = false }) => {
     try {
         const envData = fs.readFileSync(ENV_PATH, "utf8");
         const splitted = envData.split("\n");
@@ -91,18 +91,27 @@ const checkVariable = async ({ variable = null, value = null }) => {
         for (let i = 0; i < splitted.length; i++) {
             const line = splitted[i];
             const split = line.split("=");
-            if (split[0].match(pattern)) {
+            if (split[0] == variable) {
                 const { ENV_VAR, ENV_VAL } = handleEnv({ str: line });
                 alreadyExists = true;
+                if(forceUpdate === true){
+                    changeLine({ line: i, value: value });
+                    break;
+                }
                 const answer = await ask(`<${ENV_VAR}> already exits and it's value is <${ENV_VAL}> \n Continue? [Y/N] `);
                 if (answer.match(/n|no/i)) {
-                    console.log('cmd will terminate');
+                    console.log(`${ENV_VAR} not added`);
                     process.exit(0);
                 }
                 if (answer.match(/y|yes/i)) {
-                    console.log('we will continue to add');
+                    // console.log('we will continue to add');
                     changeLine({ line: i, value: value });
                     break;
+                }
+            } else {
+                //If variable not founf
+                if(i == splitted.length -1){
+                    console.log(`${variable} not found in ${getExtension()}`)
                 }
             }
         }
@@ -112,7 +121,7 @@ const checkVariable = async ({ variable = null, value = null }) => {
     }
 }
 
-const addVariable = async ({ variable = null, value = null }) => {
+const addEnvVariable = async ({ variable = null, value = null }) => {
     try {
         isEnvFileExists({ create: true });
         if (isCommentLine({ str: variable }) || isCommentLine({ str: value })) {
@@ -120,8 +129,12 @@ const addVariable = async ({ variable = null, value = null }) => {
             console.log(`Please use --comment option to add comment`);
             process.exit();
         }
-        const status = await checkVariable({ variable, value });
+        const status = await updateEnvVariable({ variable, value });
         if (status == false) {
+            const comment = commentLineOption();
+            if(comment){
+                fs.appendFileSync(ENV_PATH, `\n${comment}`);
+            }
             fs.appendFileSync(ENV_PATH, `\n${variable}=${value}`);
             console.log(`RESULT: ${variable} added as a new variable`);
             process.exit();
@@ -147,18 +160,21 @@ const listEnvVariables = () => {
             count++;
         }
     }
-    console.log(`RESULT: ${count -1 } variables found in ${getExtension()}`)
+    console.log(`RESULT: ${count - 1} variable${count - 1 !== 1 ? 's':''} found in ${getExtension()}`)
 }
 
 const commentLineOption = () => {
     const command = argvs[4];
     if (command == '--comment') {
+        console.log('comment var')
         const commentVal = argvs[5];
         if (isCommentLine({ str: commentVal })) {
-            fs.appendFileSync(ENV_PATH, `\n${commentVal}`);
+            // fs.appendFileSync(ENV_PATH, `\n${commentVal}`);
+            return commentVal;
         } else {
             console.log(`<${commentVal}> is not a comment line`);
             console.log(`It must starts with "#"`);
+            return null;
         }
     }
 }
@@ -189,18 +205,25 @@ const start = () => {
     try {
         const command = argvs[2];
         envFileType();
-        commentLineOption();
         switch (command) {
-            case "add":
+            case "add": {
                 const { ENV_VAR, ENV_VAL } = handleEnv({ str: argvs[3] });
-                addVariable({ variable: ENV_VAR, value: ENV_VAL });
+                addEnvVariable({ variable: ENV_VAR, value: ENV_VAL });
                 break;
-            case "remove":
+            }
+            case "update": {
+                const { ENV_VAR, ENV_VAL } = handleEnv({ str: argvs[3] });
+                updateEnvVariable({ variable: ENV_VAR, value: ENV_VAL, forceUpdate: true });
+                break;
+            }
+            case "remove": {
                 removeEnvVariable({ variable: argvs[3] });
                 break;
-            case "list":
+            }
+            case "list": {
                 listEnvVariables();
                 break;
+            }
         }
     } catch (e) {
         console.error(e.message);
