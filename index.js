@@ -69,6 +69,7 @@ const removeEnvVariable = ({ variable = null }) => {
         const isEnvMatch = splitted[0] == variable;
         if (isCommentLine({ str: line }) == false && isEnvMatch == true) {
             lines.splice(i, 1);
+            console.log(`✔️  : ${splitted[0]} deleted from ${getExtension()}`)
             break;
         }
         //If variable not found
@@ -97,9 +98,10 @@ const updateEnvVariable = async ({ variable = null, value = null, forceUpdate = 
                 alreadyExists = true;
                 if(forceUpdate === true){
                     changeLine({ line: i, value: value });
+                    console.log(`✔️  : ${variable} updated with "${value}" on ${getExtension()}`)
                     break;
                 }
-                const answer = await ask(`<${ENV_VAR}> already exits and it's value is <${ENV_VAL}> \n Continue? [Y/N] `);
+                const answer = await ask(`⚠️: <${ENV_VAR}> already exits and it's value is <${ENV_VAL}> \n Continue to edit? [Y/N] `);
                 if (answer.match(/n|no/i)) {
                     console.log(`⛔ : ${ENV_VAR} not added`);
                     process.exit(0);
@@ -111,7 +113,7 @@ const updateEnvVariable = async ({ variable = null, value = null, forceUpdate = 
                 }
             } else {
                 //If variable not found
-                if(i == splitted.length -1){
+                if(i === splitted.length -1 && forceUpdate === true){
                     console.log(`❗: ${variable} not found in ${getExtension()}`)
                 }
             }
