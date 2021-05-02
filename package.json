@@ -1,10 +1,13 @@
 {
   "name": "envar-cli",
-  "version": "1.0.0",
-  "description": "Initial commit",
+  "version": "1.0.2",
+  "description": "Manage your .env variable using ligthweight cli. You can add, update, remove or list your environment variables.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin":{
+    "envar-cli":"index.js"
   },
   "repository": {
     "type": "git",

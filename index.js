@@ -181,6 +181,42 @@ const commentLineOption = () => {
     }
 }
 
+const showHelp = () => {
+    console.log(`
+Usage envar-cli <command> <value>
+
+Where <command> can be:
+    * add
+    * update
+    * remove
+    * list
+    
+You can add variable using:
+    envar-cli add PORT=8080
+
+You can update variable using:
+    envar-cli update PORT=8080
+
+You can remove variable using:
+    envar-cli remove PORT=8080
+
+Default file is .env and you can change it.
+Supported files:
+    * .env
+    * .env.example
+    * .env.local
+    * .env.dev
+    * .env.development
+    * .env.prod
+    * .env.production
+    * .env.staging
+    * .env.preview
+
+For more details please visit:
+https://github.com/kodcanlisi/envar-cli#readme
+`);
+}
+
 /**
  * Types can be:
  * example
@@ -224,6 +260,10 @@ const start = () => {
             }
             case "list": {
                 listEnvVariables();
+                break;
+            }
+            case "help":{
+                showHelp();
                 break;
             }
         }

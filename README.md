@@ -5,13 +5,13 @@
 envar-cli is lightweight global package for managing .env variables using cli. 
 You can add, update, remove or list environment variables.
 
-## Install
+## 💻Install
 ``` shell
 # with npm
 npm install -g envar-cli
 ```
 
-## Usage
+## 📒Usage
 Open your terminal on project folder and check the below instructions. To get help please write **envar-cli --help** on terminal.
 
 ### Specify The .env File Extension
