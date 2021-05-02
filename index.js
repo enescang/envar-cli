@@ -73,8 +73,9 @@ const removeEnvVariable = ({ variable = null }) => {
         }
         //If variable not found
         if (i == lines.length - 1) {
-            console.log(`Could not found ${variable} on ${ENV_PATH}`);
-            console.log(`Please make sure to pay attention to case sensitivity.`);
+            console.log(`❗: Could not found ${variable} on ${getExtension()}`);
+            console.log(`❕: Please just write the variable name not with value.`)
+            console.log(`❕: Please make sure to pay attention to case sensitivity.`);
         }
     }
     const result = lines.join("\n");
@@ -100,7 +101,7 @@ const updateEnvVariable = async ({ variable = null, value = null, forceUpdate = 
                 }
                 const answer = await ask(`<${ENV_VAR}> already exits and it's value is <${ENV_VAL}> \n Continue? [Y/N] `);
                 if (answer.match(/n|no/i)) {
-                    console.log(`${ENV_VAR} not added`);
+                    console.log(`⛔ : ${ENV_VAR} not added`);
                     process.exit(0);
                 }
                 if (answer.match(/y|yes/i)) {
@@ -109,9 +110,9 @@ const updateEnvVariable = async ({ variable = null, value = null, forceUpdate = 
                     break;
                 }
             } else {
-                //If variable not founf
+                //If variable not found
                 if(i == splitted.length -1){
-                    console.log(`${variable} not found in ${getExtension()}`)
+                    console.log(`❗: ${variable} not found in ${getExtension()}`)
                 }
             }
         }
@@ -136,10 +137,10 @@ const addEnvVariable = async ({ variable = null, value = null }) => {
                 fs.appendFileSync(ENV_PATH, `\n${comment}`);
             }
             fs.appendFileSync(ENV_PATH, `\n${variable}=${value}`);
-            console.log(`RESULT: ${variable} added as a new variable`);
+            console.log(`✔️  : ${variable} added as a new variable`);
             process.exit();
         }
-        console.log(`RESULT: ${variable} edited with ${value}`);
+        console.log(`✔️  : ${variable} edited with ${value}`);
         process.exit();
     } catch (e) {
         return { error: e.message };
@@ -160,13 +161,12 @@ const listEnvVariables = () => {
             count++;
         }
     }
-    console.log(`RESULT: ${count - 1} variable${count - 1 !== 1 ? 's':''} found in ${getExtension()}`)
+    console.log(`📄  : ${count - 1} variable${count - 1 !== 1 ? 's':''} found in ${getExtension()}`)
 }
 
 const commentLineOption = () => {
     const command = argvs[4];
     if (command == '--comment') {
-        console.log('comment var')
         const commentVal = argvs[5];
         if (isCommentLine({ str: commentVal })) {
             // fs.appendFileSync(ENV_PATH, `\n${commentVal}`);
