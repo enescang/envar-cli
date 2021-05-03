@@ -21,7 +21,7 @@
   },
   "homepage": "https://github.com/kodcanlisi/envar-cli#readme",
   "dependencies": {
-    "fs": "0.0.1-security",
+    "fs": "0.0.2",
     "path": "^0.12.7"
   }
 }
