@@ -1,6 +1,6 @@
 {
   "name": "envar-cli",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Manage your .env variable using ligthweight cli. You can add, update, remove or list your environment variables.",
   "main": "index.js",
   "scripts": {
