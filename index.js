@@ -254,6 +254,8 @@ const start = () => {
                 updateEnvVariable({ variable: ENV_VAR, value: ENV_VAL, forceUpdate: true });
                 break;
             }
+            case "del":
+            case "delete":
             case "remove": {
                 removeEnvVariable({ variable: argvs[3] });
                 break;

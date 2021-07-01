@@ -129,7 +129,7 @@ If variable not exists you will see a message like this:
 **❗: <MY_VAR> not found in .env**
 
 ### Remove Variable
-Deleting is also simple. Just use **remove** command.
+Deleting is also simple. Just use **remove**, **del** or **delete**  command.
 And please:
 * Write only variable name not with value.
 * Pay attention to case sensitivity
@@ -137,10 +137,10 @@ And please:
 ``` shell
 envar-cli remove SECRET_KEY
 #or
-envar-cli remove "SECRET_KEY"
+envar-cli del "SECRET_KEY"
 
 #with specific .env file --[extension]
-envar-cli remove SECRET_KEY --staging
+envar-cli delete SECRET_KEY --staging
 ```
 
 ### List Variables
